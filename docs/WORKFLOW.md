@@ -133,6 +133,7 @@ Creates `processing/<project_name>/derived/`:
 | `chm.tif` | Vegetation height = DSM − DTM, clamped ≥ 0 | Shrub (e.g., sagebrush) height and cover, structure |
 | `contours_0.5m.gpkg` | DTM contours | Maps, water flow, layout |
 | `summary.txt` | CRS, resolution, extents, elevation stats | Record keeping |
+| `quicklooks/*.png` | 1600 px previews (ortho, hillshade, color relief, CHM) | README figures, reports |
 
 ## 5. QA checklist
 

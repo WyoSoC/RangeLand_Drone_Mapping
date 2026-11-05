@@ -12,6 +12,7 @@
 #   chm.tif                canopy/vegetation height model = DSM - DTM (m, clamped >= 0)
 #   contours_<N>m.gpkg     terrain contours from DTM (GeoPackage)
 #   summary.txt            CRS, resolution, extents, elevation stats
+#   quicklooks/*.png       small (1600 px) previews for docs/README
 #
 # Needs GDAL >= 3.11 (uses `gdal raster reclassify`) and python3 (stdlib only).
 set -euo pipefail
@@ -91,6 +92,20 @@ EOF
     --ot Float32 -i "$ABS_OUT/.chm.vrt" -o "$ABS_OUT/.chm_raw.tif"
   gdal_translate -q "$ABS_OUT/.chm_raw.tif" "$OUT/chm.tif" "${COG[@]}"
   rm -f "$ABS_OUT/.dtm_on_dsm.tif" "$ABS_OUT/.chm_raw.tif" "$ABS_OUT/.chm.vrt"
+fi
+
+echo "== Quick-look PNGs"
+QL="$OUT/quicklooks"; mkdir -p "$QL"
+ql() { have "$1" && gdal_translate -q -of PNG -outsize 1600 0 -r average "$1" "$QL/$2.png" && rm -f "$QL/$2.png.aux.xml"; }
+ql "$ORTHO" orthophoto || true
+ql "$OUT/dtm_hillshade.tif" dtm_hillshade || true
+ql "$OUT/dtm_color_relief.tif" dtm_color_relief || true
+if have "$OUT/chm.tif"; then
+  # vegetation height: 0 m light tan -> 0.5 m green -> >= 2 m dark green
+  printf "nv 0 0 0 0\n0 245 240 225\n0.5 120 190 90\n2 0 90 30\n100 0 60 20\n" > "$QL/.chm_ramp.txt"
+  gdaldem color-relief "$OUT/chm.tif" "$QL/.chm_ramp.txt" "$QL/.chm_rgb.tif" -alpha -q
+  ql "$QL/.chm_rgb.tif" chm || true
+  rm -f "$QL/.chm_ramp.txt" "$QL/.chm_rgb.tif"
 fi
 
 echo "== Summary"
