@@ -35,8 +35,34 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 - **Input:** `2026-05-21_Map/Images_Mapping`, 494 images (Images_Nav excluded)
 - **Profile:** `config/odm_full.args`
-- **Runtime:** _running_
-- **Result:** _pending_
+- **Runtime:** **3 h 07 m** (12:13 → 15:21 local). Post-processing (`postprocess.sh`): 8.5 min.
+  - SfM 29 min (features 7.6 min, matching 3.3 min, reconstruction plus rolling-shutter re-solve 18 min). Mostly single-core, ~4.5 GB RAM.
+  - OpenMVS dense: ~55 min on all 8 cores. **Peak RAM about 34 GB** during depth-map fusion, out of 48 GB in the VM.
+  - Meshing, texturing, DEMs, orthophoto, report: the rest.
+- **Reconstruction:** **494/494 images**, **1 component**, 931,931 sparse points, mean track length 3.1 images
+  (short tracks, consistent with the modest overlap). Reprojection error 0.90 px.
+- **GPS vs SfM camera positions:** RMS x 2.9 m, y 2.3 m, z 2.8 m (CE90 4.4 m, LE90 4.3 m). Normal for non-RTK.
+- **Outputs** (EPSG:32613, WGS84 / UTM 13N; 64 GB project folder in total):
+
+  | Product | Size / resolution | File size |
+  |---|---|---|
+  | Orthophoto | 60388 × 47123 px @ 2 cm (mean GSD 1.82 cm) | 3.0 GB COG |
+  | DSM / DTM | 24154 × 18848 px @ 5 cm | 365 / 363 MB COG |
+  | Point cloud | 126.8 M points, classified | 450 MB `.laz`, 4.6 GB `.las` |
+  | Textured mesh | `.obj` + 64 texture atlases | ~2.8 GB |
+  | Mapped area | 97.6 ha (≈ 1.2 × 0.94 km bounding box) | |
+
+- **Elevations:** 2141.8 – 2161.2 m (≈ 19 m relief across the site), mean 2146.5 m (GPS ellipsoidal heights, not survey-grade).
+- **QA (visual):** orthophoto is seamless with no visible holes. Tracks, two-tracks, drainages and a circular
+  disturbance/outcrop feature are clear in both the ortho and the hillshades. Clumps of individual plants
+  (~10–20 cm mounds) show in the 5 cm DSM. Faint diagonal striping along flight-line direction in the hillshade
+  comes from the low side overlap (50 %).
+- **Finding: DTM ≈ DSM, CHM ≈ 0.** PDAL shows 99.99 % of points classified as ground (class 2). This is correct
+  for this site: it is short-grass steppe, and nothing stands taller than ODM's default ground-filter threshold
+  (`--smrf-threshold 0.5 m`). The CHM (mean 3 mm, max 1.3 m) is not meaningful here. Use the DSM for microtopography and
+  plant-clump relief. To try separating low vegetation: rerun with `--rerun-from odm_dem --smrf-threshold 0.15 --smrf-window 5`
+  (experimental; it approaches the ~5 cm vertical noise of photogrammetry).
+- **Result:** ✅ all products created and checked.
 
 ---
 

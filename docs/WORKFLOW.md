@@ -156,6 +156,10 @@ Creates `processing/<project_name>/derived/`:
 ## Tuning notes for rangeland
 
 - **Low-contrast grass**: if images fail to match, try `--feature-type sift` (default) with `--min-num-features 15000`, or `--matcher-neighbors 12`.
+- **Short-grass sites (DTM ≈ DSM)**: SMRF treats anything under ~0.5 m as ground. On short-grass steppe
+  (like 2026-05-21_Map) almost every point becomes ground, so DTM ≈ DSM and the CHM is near zero. That is
+  expected behaviour. A drone-photogrammetry CHM is only meaningful for vegetation taller than ~0.3–0.5 m
+  (sagebrush, shrubs, trees).
 - **Shrubs in the DTM**: lower `--smrf-threshold` (default 0.5 m) to 0.3 m, or raise `--smrf-window` (default 18 m) for larger shrub patches.
 - **Edge artifacts**: `--auto-boundary` already crops. Add `--boundary my_area.geojson` for an exact study plot.
 - **Memory errors / OOM**: lower `--pc-quality` to `medium`, raise Colima memory, or use `--split 200 --split-overlap 50` (split-merge).

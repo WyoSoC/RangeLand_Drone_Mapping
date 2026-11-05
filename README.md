@@ -54,7 +54,19 @@ scripts/postprocess.sh processing/2026-05-21_Map 0.5
 
 | Survey | Drone / camera | Images | Altitude | GSD | Area | Status |
 |---|---|---|---|---|---|---|
-| [2026-05-21_Map](docs/DATA.md) | DJI Air 2S (FC3411) | 494 nadir | 61 m AGL | 1.75 cm | ~1.1 × 0.9 km | see [PROCESSING_LOG](docs/PROCESSING_LOG.md) |
+| [2026-05-21_Map](docs/DATA.md) | DJI Air 2S (FC3411) | 494 nadir | 61 m AGL | 1.82 cm | 97.6 ha | ✅ processed (3 h 07 m), see [PROCESSING_LOG](docs/PROCESSING_LOG.md) |
+
+### 2026-05-21_Map results
+
+| Orthophoto (2 cm) | DTM hillshade (5 cm) | DTM color relief |
+|---|---|---|
+| ![ortho](docs/img/2026-05-21_Map/orthophoto.png) | ![hillshade](docs/img/2026-05-21_Map/dtm_hillshade.png) | ![relief](docs/img/2026-05-21_Map/dtm_color_relief.png) |
+
+Detail (60 × 60 m): orthophoto vs DSM hillshade. Two-tracks, an incised drainage and individual plant clumps are visible.
+
+| Orthophoto detail | DSM hillshade detail |
+|---|---|
+| ![d1](docs/img/2026-05-21_Map/detail_60m_ortho.png) | ![d2](docs/img/2026-05-21_Map/detail_60m_dsm_hillshade.png) |
 
 ## Adding a new survey
 
