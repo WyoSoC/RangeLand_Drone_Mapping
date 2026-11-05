@@ -1,0 +1,15 @@
+# Full-quality profile: orthophoto + DSM + DTM + textured 3D model
+# Tuned for: DJI Air 2S (FC3411), nadir, ~61 m AGL (GSD ~1.8 cm), rangeland.
+--feature-quality high          # SIFT features from half-res images; robust on grass
+--pc-quality high               # dense point cloud at 1/4 image res (denser DEMs)
+--pc-classify                   # SMRF ground/non-ground classification (needed for a clean DTM)
+--rolling-shutter               # Air 2S has a rolling shutter; corrects motion distortion
+--dsm                           # Digital Surface Model (top of vegetation/objects)
+--dtm                           # Digital Terrain Model (bare ground)
+--dem-resolution 5              # cm/pixel for DSM/DTM
+--orthophoto-resolution 2       # cm/pixel (native GSD ~1.8 cm)
+--auto-boundary                 # trim noisy edges outside the flight area
+--cog                           # Cloud-Optimized GeoTIFF outputs
+--build-overviews               # internal overviews for fast viewing in QGIS
+--pc-las                        # also export the point cloud as .las
+--max-concurrency 8

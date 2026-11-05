@@ -1,0 +1,30 @@
+# --- Raw imagery (large; archive separately, see docs/DATA.md) ---
+*.JPG
+*.jpg
+*.JPEG
+*.jpeg
+*.DNG
+*.dng
+*.MP4
+*.mp4
+
+# --- ODM processing outputs (regenerable; tens of GB) ---
+processing/
+
+# --- Large geospatial outputs, if copied elsewhere in the tree ---
+*.tif
+*.tiff
+*.laz
+*.las
+*.ply
+*.obj
+*.glb
+*.mtl
+*.aux.xml
+
+# --- OS / editor ---
+.DS_Store
+.vscode/
+.idea/
+__pycache__/
+*.pyc

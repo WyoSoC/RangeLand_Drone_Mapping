@@ -1,0 +1,9 @@
+# Quick preview profile: fast orthophoto only (minutes, not hours).
+# Use for checking coverage / image quality before a full run.
+--fast-orthophoto
+--feature-quality medium
+--orthophoto-resolution 5
+--auto-boundary
+--skip-3dmodel
+--skip-report
+--max-concurrency 8

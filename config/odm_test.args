@@ -1,0 +1,13 @@
+# Small end-to-end test: same products as 'full' at lower quality.
+# Use on a subset of images to validate the pipeline.
+--feature-quality medium
+--pc-quality medium
+--pc-classify
+--rolling-shutter
+--dsm
+--dtm
+--dem-resolution 10
+--orthophoto-resolution 5
+--auto-boundary
+--cog
+--max-concurrency 8
