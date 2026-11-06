@@ -113,6 +113,18 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ---
 
+## 2026-11-05: cleanup of intermediate files
+
+Deleted ~63 GB of intermediate and test data (processing folder 75.7 GB → 13 GB):
+`opensfm/` (46 GB), `odm_filterpoints/`, `odm_texturing_25d/`, `odm_meshing/`, the uncompressed `.las` duplicate,
+`*.original.tif` (pre-crop ortho/DSM/DTM), `processing/test_flight3/`, `processing/_subsets/` (hard links only;
+raw photos untouched), and `vegetation/test*` (parameter tests). All products, the QGIS project layers (18/18)
+and `deliverables/` were checked afterwards.
+**Consequence:** ODM can no longer `--rerun-from` an intermediate stage for this project. Reprocessing means a
+full run from the raw photos (~3 h).
+
+---
+
 ## Template
 
 ```

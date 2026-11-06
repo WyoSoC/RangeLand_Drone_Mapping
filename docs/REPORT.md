@@ -41,7 +41,7 @@ the example windows used below. Grid in metres, UTM zone 13N (EPSG:32613).*
 
 ## 2. What was produced
 
-All outputs are in `processing/2026-05-21_Map/` (71 GB, not in git). Every raster is a GeoTIFF/COG in
+All outputs are in `processing/2026-05-21_Map/` (13 GB after removing intermediate files, not in git). Every raster is a GeoTIFF/COG in
 **WGS 84 / UTM 13N (EPSG:32613)**.
 
 ### Recommended layers (start here)

@@ -100,6 +100,9 @@ To rerun only later stages (e.g., after changing DEM options), keep the project 
 scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map full --rerun-from odm_dem
 ```
 
+To free disk space after QA, the intermediate folders (`opensfm/`, `odm_filterpoints/`, `odm_meshing/`,
+`odm_texturing_25d/`, `*.original.tif`, `.las`) can be deleted. That removes the option to `--rerun-from` a later stage.
+
 ODM stage order: `dataset → split → merge → opensfm → openmvs → odm_filterpoints → odm_meshing →
 mvs_texturing → odm_georeferencing → odm_dem → odm_orthophoto → odm_report → odm_postprocess`.
 
