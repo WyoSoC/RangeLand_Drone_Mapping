@@ -146,6 +146,27 @@ per point, and writes `vegetation/chm_10cm.tif`, `veg_mask_10cm.tif`, `veg_cover
 and `classified_hag.laz`. ODM's outputs are left untouched. Method, parameter comparison and known
 artifacts are in [VEGETATION.md](VEGETATION.md).
 
+## 4c. Vertical check and correction against USGS 3DEP (US sites)
+
+Without GCPs/RTK, ODM's heights carry a constant offset and a smooth bowl ("doming") distortion.
+For 2026-05-21_Map: −40.8 m offset and a 13.6 m bowl. `correct_dem_3dep.py` downloads the USGS 3DEP lidar DEM,
+fits a 2nd-order surface to (drone − 3DEP) and writes corrected DEMs in NAVD88 (residual 0.12 m RMSE here).
+Then rerun `postprocess.sh` on the corrected DEMs:
+
+```bash
+QPY=/Applications/QGIS-final-4_2_3.app/Contents/MacOS/python    # Python with GDAL + numpy
+$QPY scripts/correct_dem_3dep.py processing/2026-05-21_Map
+P=processing/2026-05-21_Map
+DSM=$P/corrected/dsm_navd88.tif DTM=$P/corrected/dtm_navd88.tif OUT=$P/derived_navd88 scripts/postprocess.sh $P 0.25
+```
+
+**Always run this check** when no ground control is available, and use `corrected/` and `derived_navd88/` for elevation work.
+
+## 4d. Report and QGIS project
+
+`make_report_figures.py` and `make_qgis_project.py` build `docs/REPORT.md`'s figures and a pre-styled QGIS
+project (`qgis/<survey>.qgz`). See [REPORT.md §9](REPORT.md#9-reproducing-this-report).
+
 ## 5. QA checklist
 
 1. **`odm_report/report.pdf`**:

@@ -7,6 +7,9 @@ contours, classified point clouds and textured 3D models**.
 Engine: [OpenDroneMap](https://github.com/OpenDroneMap/ODM) (Docker), post-processing with [GDAL](https://gdal.org),
 viewing in [QGIS](https://qgis.org). Tested on macOS / Apple Silicon (M1 Max, 64 GB).
 
+> 📄 **Results report with viewing/interpretation guide: [docs/REPORT.md](docs/REPORT.md)**.
+> 🗺️ **Ready-made QGIS project: `qgis/2026-05-21_Map.qgz`** (open in QGIS after processing).
+
 ## Quick start
 
 ```bash
@@ -26,6 +29,17 @@ scripts/postprocess.sh processing/2026-05-21_Map 0.5
 
 # 4. fine-scale vegetation height / cover for short vegetation
 scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
+
+# 5. vertical correction against USGS 3DEP lidar (+ terrain products from corrected DEMs)
+QPY=/Applications/QGIS-final-4_2_3.app/Contents/MacOS/python   # any Python with GDAL+numpy
+$QPY scripts/correct_dem_3dep.py processing/2026-05-21_Map
+DSM=processing/2026-05-21_Map/corrected/dsm_navd88.tif DTM=processing/2026-05-21_Map/corrected/dtm_navd88.tif \
+  OUT=processing/2026-05-21_Map/derived_navd88 scripts/postprocess.sh processing/2026-05-21_Map 0.25
+
+# 6. report figures + QGIS project
+$QPY scripts/make_report_figures.py processing/2026-05-21_Map 2026-05-21_Map/metadata/Images_Mapping_inventory.csv docs/report/fig
+QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-21_Map \
+  2026-05-21_Map/metadata/Images_Mapping_cameras.geojson qgis/2026-05-21_Map.qgz docs/report/fig
 ```
 
 ## Repository layout
@@ -34,7 +48,9 @@ scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
 .
 ├── README.md
 ├── docs/
-│   ├── WORKFLOW.md          # step-by-step processing guide (start here)
+│   ├── REPORT.md            # results report: products, viewing, interpretation, accuracy
+│   ├── report/fig/          # report figures
+│   ├── WORKFLOW.md          # step-by-step processing guide
 │   ├── DATA.md              # dataset description, flight parameters, accuracy notes
 │   ├── SOFTWARE.md          # tool choices, licenses, alternatives
 │   ├── VEGETATION.md        # fine-scale vegetation height: method, parameter test, artifacts
@@ -47,7 +63,13 @@ scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
 │   ├── inventory_images.py  # EXIF/XMP inventory, flight summary, camera GeoJSON (stdlib only)
 │   ├── run_odm.sh           # runs ODM in Docker with a profile; logs everything
 │   ├── postprocess.sh       # GDAL: hillshade, slope, color relief, CHM, contours, summary
-│   └── vegetation_chm.sh    # PDAL fine ground filter → height above ground, vegetation cover
+│   ├── vegetation_chm.sh    # PDAL fine ground filter → height above ground, vegetation cover
+│   ├── correct_dem_3dep.py  # vertical check + bowl/offset correction against USGS 3DEP lidar
+│   ├── export_section.sh    # point-cloud slice → CSV (cross-sections)
+│   ├── make_report_figures.py  # figures for docs/REPORT.md (matplotlib + GDAL)
+│   └── make_qgis_project.py # pre-styled QGIS project + example map renders (PyQGIS)
+├── qgis/
+│   └── 2026-05-21_Map.qgz   # ready-to-open QGIS project (relative paths to processing/)
 ├── 2026-05-21_Map/          # one folder per survey
 │   ├── Images_Mapping/      # raw nadir images (NOT in git)
 │   ├── Images_Nav/          # ground-level takeoff photos (NOT in git, not processed)
@@ -59,13 +81,15 @@ scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
 
 | Survey | Drone / camera | Images | Altitude | GSD | Area | Status |
 |---|---|---|---|---|---|---|
-| [2026-05-21_Map](docs/DATA.md) | DJI Air 2S (FC3411) | 494 nadir | 61 m AGL | 1.82 cm | 97.6 ha | ✅ processed (3 h 07 m), see [PROCESSING_LOG](docs/PROCESSING_LOG.md) |
+| [2026-05-21_Map](docs/DATA.md) | DJI Air 2S (FC3411) | 494 nadir | 61 m AGL | 1.82 cm | 97.6 ha | ✅ processed, see [REPORT](docs/REPORT.md) · [log](docs/PROCESSING_LOG.md) |
 
 ### 2026-05-21_Map results
 
-| Orthophoto (2 cm) | DTM hillshade (5 cm) | DTM color relief |
+| Orthophoto (2 cm) | DTM hillshade (5 cm) | Corrected DTM (NAVD88) + 0.25 m contours |
 |---|---|---|
-| ![ortho](docs/img/2026-05-21_Map/orthophoto.png) | ![hillshade](docs/img/2026-05-21_Map/dtm_hillshade.png) | ![relief](docs/img/2026-05-21_Map/dtm_color_relief.png) |
+| ![ortho](docs/img/2026-05-21_Map/orthophoto.png) | ![hillshade](docs/img/2026-05-21_Map/dtm_hillshade.png) | ![terrain](docs/report/fig/10_qgis_terrain.png) |
+
+Raw ODM heights were bowl-shaped (13.6 m) and 40.8 m low. Corrected against USGS 3DEP lidar to 0.12 m RMSE ([REPORT §5.2](docs/REPORT.md#52-elevation-why-the-corrected-layers-matter)).
 
 Detail (60 × 60 m): orthophoto vs DSM hillshade. Two-tracks, an incised drainage and individual plant clumps are visible.
 

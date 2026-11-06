@@ -86,6 +86,22 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ---
 
+## 2026-11-05: `2026-05-21_Map` vertical check, correction, report
+
+- **Vertical check vs USGS 3DEP** (`correct_dem_3dep.py`, 2 m grid, 156k cells): raw ODM DTM = 3DEP − 40.8 m (std 2.9 m),
+  with a **bowl ("doming") distortion of 13.6 m**: centre too low, edges too high. A 2nd-order polynomial fit removes it.
+  Residual **0.12 m RMSE**, p05/p95 −0.20/+0.18 m. Spot checks at 11 USGS EPQS points: within 0.00–0.34 m.
+- **Corrected DEMs** written to `corrected/*_navd88.tif`. Terrain products regenerated into `derived_navd88/`
+  (0.25 m contours).
+- **postprocess.sh changes:** contours are now generated from a 1 m-averaged DTM (the 5 cm DTM gave 56k noisy rings,
+  132 MB → 5.7k lines, 3 MB). Added `dtm_slope_deg_1m.tif` (terrain slope, median 1.5°). The 5 cm slope
+  (median ≈ 5°) mostly measures grass-hummock roughness.
+- **Report:** `docs/REPORT.md` with 13 figures (`make_report_figures.py`), point-cloud slices (`export_section.sh`)
+  and a pre-styled QGIS project `qgis/2026-05-21_Map.qgz` (`make_qgis_project.py`).
+- Added `--gltf` to `config/odm_full.args` for future runs (no `.glb` was produced this time).
+
+---
+
 ## Template
 
 ```

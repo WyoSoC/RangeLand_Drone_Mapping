@@ -7,25 +7,29 @@
 # Creates processing/<project_name>/derived/:
 #   dtm_hillshade.tif      shaded relief of bare-earth terrain
 #   dsm_hillshade.tif      shaded relief of surface (vegetation, objects)
-#   dtm_slope_deg.tif      terrain slope in degrees
+#   dtm_slope_deg.tif      slope at full res (micro-relief), degrees
+#   dtm_slope_deg_1m.tif   terrain-scale slope (DTM averaged to 1 m), degrees
 #   dtm_color_relief.tif   colorized DTM (RGB) for quick visual use
 #   chm.tif                canopy/vegetation height model = DSM - DTM (m, clamped >= 0)
 #   contours_<N>m.gpkg     terrain contours from DTM (GeoPackage)
 #   summary.txt            CRS, resolution, extents, elevation stats
 #   quicklooks/*.png       small (1600 px) previews for docs/README
 #
+# Use the 3DEP-corrected DEMs from scripts/correct_dem_3dep.py instead of ODM's raw DEMs:
+#   DSM=processing/<p>/corrected/dsm_navd88.tif DTM=processing/<p>/corrected/dtm_navd88.tif \
+#   OUT=processing/<p>/derived_navd88 scripts/postprocess.sh processing/<p> 0.25
+#
 # Needs GDAL >= 3.11 (uses `gdal raster reclassify`) and python3 (stdlib only).
 set -euo pipefail
 
 PROJ="${1:?project dir required, e.g. processing/2026-05-21_Map}"
 INTERVAL="${2:-0.5}"
-DEM="$PROJ/odm_dem"
 ORTHO="$PROJ/odm_orthophoto/odm_orthophoto.tif"
-OUT="$PROJ/derived"
+OUT="${OUT:-$PROJ/derived}"
 mkdir -p "$OUT"
 
-DSM="$DEM/dsm.tif"
-DTM="$DEM/dtm.tif"
+DSM="${DSM:-$PROJ/odm_dem/dsm.tif}"
+DTM="${DTM:-$PROJ/odm_dem/dtm.tif}"
 COG=(-of COG -co COMPRESS=DEFLATE -co PREDICTOR=2 -co BIGTIFF=IF_SAFER)
 
 have() { [[ -f "$1" ]]; }
@@ -33,7 +37,11 @@ have() { [[ -f "$1" ]]; }
 if have "$DTM"; then
   echo "== DTM products"
   gdaldem hillshade "$DTM" "$OUT/dtm_hillshade.tif" -multidirectional -compute_edges "${COG[@]}" -q
+  # Slope at full resolution (5 cm) mostly measures micro-relief (grass hummocks, ruts).
   gdaldem slope     "$DTM" "$OUT/dtm_slope_deg.tif" -compute_edges "${COG[@]}" -q
+  # Terrain-scale slope: from the DTM averaged to 1 m first.
+  gdalwarp -q -overwrite -tr 1 1 -r average "$DTM" "$OUT/.dtm_1m.tif"
+  gdaldem slope "$OUT/.dtm_1m.tif" "$OUT/dtm_slope_deg_1m.tif" -compute_edges "${COG[@]}" -q
 
   # Color relief ramp stretched to the DTM's own 2nd..98th percentile-ish range (min/max here).
   read -r ZMIN ZMAX < <(gdalinfo -stats "$DTM" 2>/dev/null \
@@ -48,8 +56,10 @@ if have "$DTM"; then
   rm -f "$RAMP"
 
   echo "== Contours every ${INTERVAL} m"
+  # From the 1 m DTM: contours from the 5 cm DTM trace every grass hummock (tens of thousands of tiny rings).
   rm -f "$OUT/contours_${INTERVAL}m.gpkg"
-  gdal_contour -q -a elev_m -i "$INTERVAL" -f GPKG "$DTM" "$OUT/contours_${INTERVAL}m.gpkg"
+  gdal_contour -q -a elev_m -i "$INTERVAL" -f GPKG "$OUT/.dtm_1m.tif" "$OUT/contours_${INTERVAL}m.gpkg"
+  rm -f "${OUT:?}/.dtm_1m.tif"
 fi
 
 if have "$DSM"; then

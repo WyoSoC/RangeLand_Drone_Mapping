@@ -53,7 +53,9 @@ at the same overlap settings. Fewer images, better matching, GSD still 2.3–2.9
 There are **no GCPs and no RTK**, so:
 
 - **Relative accuracy** (inside the map: distances, areas, local height differences such as shrub heights) is good, typically a few cm.
-- **Absolute accuracy** (true position on Earth) is set by the drone's GPS: typically **1–3 m horizontal and 2–5 m or more vertical**. The vertical datum comes from the drone's GPS height. Don't compare absolute elevations with USGS 3DEP or survey data without first co-registering.
+- **Absolute accuracy** (true position on Earth) is set by the drone's GPS: typically **1–3 m horizontal**. Vertically, the raw ODM
+  heights for this survey were **40.8 m below NAVD88 with a 13.6 m bowl distortion** (measured against USGS 3DEP).
+  After `scripts/correct_dem_3dep.py` the corrected DEMs match 3DEP to **0.12 m RMSE**. See [REPORT.md §5.2](REPORT.md#52-elevation-why-the-corrected-layers-matter).
 - For repeat surveys (change detection), either place GCPs or co-register each survey to a reference (e.g., ODM `--align` against an earlier DSM/point cloud).
 
 ## Raw data handling

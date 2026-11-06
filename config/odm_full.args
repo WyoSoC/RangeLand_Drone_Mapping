@@ -13,3 +13,4 @@
 --build-overviews               # internal overviews for fast viewing in QGIS
 --pc-las                        # also export the point cloud as .las
 --max-concurrency 8
+--gltf                          # also export the textured model as .glb (web/3D viewers)
