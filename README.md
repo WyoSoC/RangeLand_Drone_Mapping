@@ -118,7 +118,7 @@ low 50 % side overlap), not vegetation.
 ## Data and outputs
 
 **Deliverables:** the essential mapping products (orthophoto, corrected DTM/DSM, contours, slope, vegetation cover,
-QA report; ~3.4 GB) are copied with descriptive names into `deliverables/<survey>/` with a `README.txt`
+point cloud, textured 3D model (.glb), QA report; ~4.2 GB) are copied with descriptive names into `deliverables/<survey>/` with a `README.txt`
 (CRS, units, accuracy, caveats). Use that folder for archiving or sharing. It is excluded from git.
 
 Raw imagery (3.6 GB for this survey) and processing outputs (tens of GB) are excluded from git
