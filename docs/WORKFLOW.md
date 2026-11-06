@@ -135,6 +135,17 @@ Creates `processing/<project_name>/derived/`:
 | `summary.txt` | CRS, resolution, extents, elevation stats | Record keeping |
 | `quicklooks/*.png` | 1600 px previews (ortho, hillshade, color relief, CHM) | README figures, reports |
 
+## 4b. Fine-scale vegetation (short grass / low shrubs)
+
+```bash
+scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
+```
+
+Reclassifies the point cloud with a fine SMRF (threshold 0.05 m, window 2 m), computes height above ground
+per point, and writes `vegetation/chm_10cm.tif`, `veg_mask_10cm.tif`, `veg_cover_1m.tif`, `dtm_fine_10cm.tif`
+and `classified_hag.laz`. ODM's outputs are left untouched. Method, parameter comparison and known
+artifacts are in [VEGETATION.md](VEGETATION.md).
+
 ## 5. QA checklist
 
 1. **`odm_report/report.pdf`**:
@@ -158,8 +169,7 @@ Creates `processing/<project_name>/derived/`:
 - **Low-contrast grass**: if images fail to match, try `--feature-type sift` (default) with `--min-num-features 15000`, or `--matcher-neighbors 12`.
 - **Short-grass sites (DTM ≈ DSM)**: SMRF treats anything under ~0.5 m as ground. On short-grass steppe
   (like 2026-05-21_Map) almost every point becomes ground, so DTM ≈ DSM and the CHM is near zero. That is
-  expected behaviour. A drone-photogrammetry CHM is only meaningful for vegetation taller than ~0.3–0.5 m
-  (sagebrush, shrubs, trees).
+  expected behaviour. Use `scripts/vegetation_chm.sh` (step 4b) for fine-scale vegetation instead.
 - **Shrubs in the DTM**: lower `--smrf-threshold` (default 0.5 m) to 0.3 m, or raise `--smrf-window` (default 18 m) for larger shrub patches.
 - **Edge artifacts**: `--auto-boundary` already crops. Add `--boundary my_area.geojson` for an exact study plot.
 - **Memory errors / OOM**: lower `--pc-quality` to `medium`, raise Colima memory, or use `--split 200 --split-overlap 50` (split-merge).

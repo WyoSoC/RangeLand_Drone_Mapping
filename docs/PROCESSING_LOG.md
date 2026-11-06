@@ -66,6 +66,26 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ---
 
+## 2026-11-05: `2026-05-21_Map` vegetation (fine-scale ground filter)
+
+- **Goal:** recover low vegetation that ODM's default ground filter merges into the DTM.
+- **Script:** `scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10` (PDAL inside the ODM container)
+- **Parameter test:** 5 ground filters on a 200 × 200 m tile (SMRF default / t0.15 w5 / t0.10 w3 / **t0.05 w2** / CSF).
+  The most aggressive SMRF (threshold 0.05 m, window 2 m, slope 0.2, scalar 1.0) was picked. Details in [VEGETATION.md](VEGETATION.md).
+- **Runtime:** 6 min for the full cloud (PDAL ~4 min, ~15 GB RAM).
+- **Result:** ground share 100 % → ~77 % on the test tile. Vegetation cover ≥ 0.10 m = **3.9 %** of the site.
+  CHM max 2.43 m. Real vegetation patterns are visible (ring around the circular feature, darker patches).
+- **Issue: ghost layers.** Straight bands and an L-shape come from doubled surfaces ~10–20 cm apart where
+  overlapping images disagree (sampled: 370 pts/m² in two layers vs ~130 pts/m² normally). Smaller windows,
+  mean-HAG, point density and higher thresholds did not separate them from real vegetation. Documented as a
+  known artifact. Root cause: 50 % side overlap.
+- **Bugs fixed on the way:**
+  - The 1 m cover raster was resampled from cubic COG overviews (max 1.6) → `gdalwarp -ovr NONE` plus
+    `OVERVIEW_RESAMPLING=NEAREST` for the mask.
+  - Byte mask nodata handling → VRT without nodata, then reclassify to 255.
+
+---
+
 ## Template
 
 ```

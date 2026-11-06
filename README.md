@@ -23,6 +23,9 @@ scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map full
 
 # 3. derived products (hillshade, slope, contours, canopy height model)
 scripts/postprocess.sh processing/2026-05-21_Map 0.5
+
+# 4. fine-scale vegetation height / cover for short vegetation
+scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
 ```
 
 ## Repository layout
@@ -34,6 +37,7 @@ scripts/postprocess.sh processing/2026-05-21_Map 0.5
 │   ├── WORKFLOW.md          # step-by-step processing guide (start here)
 │   ├── DATA.md              # dataset description, flight parameters, accuracy notes
 │   ├── SOFTWARE.md          # tool choices, licenses, alternatives
+│   ├── VEGETATION.md        # fine-scale vegetation height: method, parameter test, artifacts
 │   └── PROCESSING_LOG.md    # record of every processing run and its results
 ├── config/
 │   ├── odm_full.args        # full-quality ODM profile (commented)
@@ -42,7 +46,8 @@ scripts/postprocess.sh processing/2026-05-21_Map 0.5
 ├── scripts/
 │   ├── inventory_images.py  # EXIF/XMP inventory, flight summary, camera GeoJSON (stdlib only)
 │   ├── run_odm.sh           # runs ODM in Docker with a profile; logs everything
-│   └── postprocess.sh       # GDAL: hillshade, slope, color relief, CHM, contours, summary
+│   ├── postprocess.sh       # GDAL: hillshade, slope, color relief, CHM, contours, summary
+│   └── vegetation_chm.sh    # PDAL fine ground filter → height above ground, vegetation cover
 ├── 2026-05-21_Map/          # one folder per survey
 │   ├── Images_Mapping/      # raw nadir images (NOT in git)
 │   ├── Images_Nav/          # ground-level takeoff photos (NOT in git, not processed)
@@ -68,12 +73,21 @@ Detail (60 × 60 m): orthophoto vs DSM hillshade. Two-tracks, an incised drainag
 |---|---|
 | ![d1](docs/img/2026-05-21_Map/detail_60m_ortho.png) | ![d2](docs/img/2026-05-21_Map/detail_60m_dsm_hillshade.png) |
 
+Fine-scale vegetation (see [docs/VEGETATION.md](docs/VEGETATION.md)): vegetation cover ≥ 10 cm on 1 m cells
+(left) and max height above ground (right). Straight bands are known photogrammetry artifacts (ghost layers from the
+low 50 % side overlap), not vegetation.
+
+| Vegetation cover ≥ 0.10 m | Max height above ground |
+|---|---|
+| ![cover](docs/img/2026-05-21_Map/veg_full_veg_cover.png) | ![chm](docs/img/2026-05-21_Map/veg_full_chm.png) |
+
 ## Adding a new survey
 
 1. Create `YYYY-MM-DD_<Name>/Images_Mapping/` and copy in **only nadir mapping images**.
 2. `python3 scripts/inventory_images.py YYYY-MM-DD_<Name>/Images_Mapping -o .../metadata/inventory.csv --geojson .../metadata/cameras.geojson`
 3. `scripts/run_odm.sh YYYY-MM-DD_<Name>/Images_Mapping YYYY-MM-DD_<Name> full`
 4. `scripts/postprocess.sh processing/YYYY-MM-DD_<Name>`
+   (+ `scripts/vegetation_chm.sh processing/YYYY-MM-DD_<Name>` for short vegetation)
 5. Add a section to `docs/DATA.md` and an entry to `docs/PROCESSING_LOG.md`.
 
 ## Data and outputs
