@@ -198,6 +198,22 @@ scripts/cleanup_intermediate.sh 2026-05-21_Map --yes        # delete intermediat
 | `<date>_3D_model_textured.glb` | Textured 3D model |
 | `<date>_ODM_quality_report.pdf` | ODM QA report |
 
+To share the products, zip and publish them:
+
+```bash
+scripts/publish_deliverables.sh 2026-05-21_Map
+```
+
+The script zips `deliverables/<survey>/` (stored uncompressed, since the GeoTIFF/LAZ/GLB files are already compressed;
+Zip64 for > 4 GB), writes a SHA-256 file, uploads both with `rsync` over Tailscale SSH to
+`datahive:/mnt/datahive/Data/DeweyData_Filtered/RangeLand_DroneMaps/`, checks the checksum on the server, and
+confirms the public URL serves the full file. Uploading over Tailscale took 16 min (~4.8 MB/s). Public downloads
+through Funnel run at ~1.2 MB/s (≈ 1 h for 4.6 GB) and support resume (HTTP range requests). That folder is published by **Tailscale Funnel** at
+`https://datahive.echo-tint.ts.net/`. Anything placed there is publicly downloadable by anyone with the link.
+Override `REMOTE_HOST`, `REMOTE_DIR` and `PUBLIC_URL` for another server.
+
+Current download for 2026-05-21_Map: https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip
+
 `cleanup_intermediate.sh` removes ODM's intermediate data and the parameter-test folders. Final products, the
 layers used by the QGIS project, reference data and logs are kept. Afterwards ODM can't `--rerun-from` a later
 stage: reprocessing means a full run from the raw photos.

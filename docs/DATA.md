@@ -64,6 +64,8 @@ Raw images are **not** stored in git; `.gitignore` excludes `*.JPG`. Keep the or
 archive (external drive, institutional storage, or a data repository such as Zenodo/Dryad) and
 record its location here:
 
-- Archive location: _TODO_
+- Raw photo archive location: _TODO_ (raw photos are not published)
+- **Final products (zip, 4.6 GB):** https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip
+  (SHA-256 `742812ae3bfb6153b3d760ac1974d6f762a4627c04093724f297337ed9d9ad6d`). Hosted on datahive.uwyo.edu and shared through Tailscale Funnel.
 - Checksums: SHA-256 of all 498 images in `2026-05-21_Map/metadata/sha256sums.txt`
   (verify with `shasum -a 256 -c 2026-05-21_Map/metadata/sha256sums.txt`)

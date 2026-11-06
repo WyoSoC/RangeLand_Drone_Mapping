@@ -8,7 +8,8 @@ Engine: [OpenDroneMap](https://github.com/OpenDroneMap/ODM) (Docker), post-proce
 viewing in [QGIS](https://qgis.org). Tested on macOS / Apple Silicon (M1 Max, 64 GB).
 
 > 📄 **Results report with viewing/interpretation guide: [docs/REPORT.md](docs/REPORT.md)**.
-> 📦 **Final mapping products:** `deliverables/2026-05-21_Map/` (kept locally, not in git; see [Products](#products-2026-05-21_map)).
+> 📦 **Download the mapping products (4.6 GB zip):** [RangeLand_2026-05-21_Map_deliverables.zip](https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip)
+> ([checksum](https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip.sha256); contents: [Products](#products-2026-05-21_map)).
 > 🗺️ **Pre-styled QGIS project:** `qgis/2026-05-21_Map.qgz`.
 
 ## Quick start
@@ -70,6 +71,7 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 │   ├── make_glb.sh          # textured mesh → .glb 3D model (ODM's converter)
 │   ├── make_deliverables.sh # copy final products to deliverables/<survey>/ with final names
 │   ├── cleanup_intermediate.sh  # delete ODM intermediate data (dry run by default)
+│   ├── publish_deliverables.sh  # zip deliverables + upload to the public download server
 │   ├── make_report_figures.py  # figures for docs/REPORT.md (matplotlib + GDAL)
 │   └── make_qgis_project.py # pre-styled QGIS project + example map renders (PyQGIS)
 ├── qgis/
@@ -90,7 +92,10 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 
 ### Products (2026-05-21_Map)
 
-In `deliverables/2026-05-21_Map/` (4.2 GB). UTM 13N (EPSG:32613), heights in metres NAVD88.
+**Download:** [RangeLand_2026-05-21_Map_deliverables.zip](https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip) (4.6 GB, 9 products + `README.txt`)
+SHA-256 `742812ae3bfb6153b3d760ac1974d6f762a4627c04093724f297337ed9d9ad6d`
+
+Locally the same files are in `deliverables/2026-05-21_Map/`. UTM 13N (EPSG:32613), heights in metres NAVD88.
 
 | Product | File | Size |
 |---|---|---|
@@ -139,9 +144,13 @@ low 50 % side overlap), not vegetation.
    (see Quick start step 5).
 6. `scripts/make_deliverables.sh YYYY-MM-DD_<Name>` copies the final products to `deliverables/`. Add a `README.txt`.
    Then run `scripts/cleanup_intermediate.sh YYYY-MM-DD_<Name> --yes` (see [WORKFLOW §6](docs/WORKFLOW.md#6-deliverables-and-cleanup)).
+   Publish with `scripts/publish_deliverables.sh YYYY-MM-DD_<Name>` and add the download link to this README.
 7. Add a section to `docs/DATA.md` and an entry to `docs/PROCESSING_LOG.md`.
 
 ## Data and outputs
+
+**Download:** the deliverables are published as a zip on the University of Wyoming datahive server via Tailscale
+Funnel: https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip
 
 **Deliverables:** the essential mapping products (orthophoto, corrected DTM/DSM, contours, slope, vegetation cover,
 point cloud, textured 3D model (.glb), QA report; ~4.2 GB) are copied with descriptive names into `deliverables/<survey>/` with a `README.txt`

@@ -126,6 +126,19 @@ full run from the raw photos (~3 h).
 
 ---
 
+## 2026-11-05: published deliverables
+
+- Zipped `deliverables/2026-05-21_Map/` (9 products + README.txt) with `scripts/publish_deliverables.sh`: 4,556,471,701 bytes,
+  stored (no recompression), Zip64, `unzip -t` OK.
+  SHA-256 `742812ae3bfb6153b3d760ac1974d6f762a4627c04093724f297337ed9d9ad6d`.
+- Uploaded with rsync over Tailscale SSH to `datahive:/mnt/datahive/Data/DeweyData_Filtered/RangeLand_DroneMaps/`.
+  Public via Tailscale Funnel: https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip
+- Verified: server `sha256sum -c` OK. Public URL serves the full 4,556,471,701 bytes (`application/zip`, range requests
+  supported). The first and last 1 MB fetched publicly match the local zip. Upload 16 min. Public download ≈ 1.2 MB/s.
+- Note: macOS `openrsync` doesn't support `--info=progress2`. The first upload attempt failed silently because of it.
+
+---
+
 ## Template
 
 ```

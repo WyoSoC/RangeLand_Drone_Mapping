@@ -41,8 +41,13 @@ the example windows used below. Grid in metres, UTM zone 13N (EPSG:32613).*
 
 ## 2. What was produced
 
-The final products are in **`deliverables/2026-05-21_Map/`** (4.2 GB, kept locally, not in git), together with a
-`README.txt` describing each file. Every file uses **WGS 84 / UTM 13N (EPSG:32613)**. Heights are metres above **NAVD88**.
+**Download all products (one zip, 4.6 GB):** <https://datahive.echo-tint.ts.net/RangeLand_DroneMaps/RangeLand_2026-05-21_Map_deliverables.zip>
+SHA-256: `742812ae3bfb6153b3d760ac1974d6f762a4627c04093724f297337ed9d9ad6d` (also at the same URL + `.sha256`)
+
+Downloads go through Tailscale Funnel at about 1 MB/s, so allow about an hour. Interrupted downloads can resume
+(`curl -C - -O <url>`). Verify with `shasum -a 256 -c RangeLand_2026-05-21_Map_deliverables.zip.sha256`.
+The zip unpacks to a folder `2026-05-21_Map/` with the files below and a `README.txt` describing each file.
+Locally they are in `deliverables/2026-05-21_Map/` (not in git). Every file uses **WGS 84 / UTM 13N (EPSG:32613)**. Heights are metres above **NAVD88**.
 
 | Product | File | Size | Units / resolution | Use it for |
 |---|---|---|---|---|
