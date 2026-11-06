@@ -8,7 +8,8 @@ Engine: [OpenDroneMap](https://github.com/OpenDroneMap/ODM) (Docker), post-proce
 viewing in [QGIS](https://qgis.org). Tested on macOS / Apple Silicon (M1 Max, 64 GB).
 
 > 📄 **Results report with viewing/interpretation guide: [docs/REPORT.md](docs/REPORT.md)**.
-> 🗺️ **Ready-made QGIS project: `qgis/2026-05-21_Map.qgz`** (open in QGIS after processing).
+> 📦 **Final mapping products:** `deliverables/2026-05-21_Map/` (kept locally, not in git; see [Products](#products-2026-05-21_map)).
+> 🗺️ **Pre-styled QGIS project:** `qgis/2026-05-21_Map.qgz`.
 
 ## Quick start
 
@@ -70,12 +71,13 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 │   ├── make_report_figures.py  # figures for docs/REPORT.md (matplotlib + GDAL)
 │   └── make_qgis_project.py # pre-styled QGIS project + example map renders (PyQGIS)
 ├── qgis/
-│   └── 2026-05-21_Map.qgz   # ready-to-open QGIS project (relative paths to processing/)
+│   └── 2026-05-21_Map.qgz   # pre-styled QGIS project (opens the local working outputs)
 ├── 2026-05-21_Map/          # one folder per survey
 │   ├── Images_Mapping/      # raw nadir images (NOT in git)
 │   ├── Images_Nav/          # ground-level takeoff photos (NOT in git, not processed)
 │   └── metadata/            # inventory CSV, camera GeoJSON, SHA-256 checksums (in git)
-└── processing/              # ODM outputs (NOT in git; regenerable)
+├── deliverables/            # final products per survey + README.txt (NOT in git)
+└── processing/              # local working folder for scripts (NOT in git; regenerable)
 ```
 
 ## Surveys
@@ -83,6 +85,24 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 | Survey | Drone / camera | Images | Altitude | GSD | Area | Status |
 |---|---|---|---|---|---|---|
 | [2026-05-21_Map](docs/DATA.md) | DJI Air 2S (FC3411) | 494 nadir | 61 m AGL | 1.82 cm | 97.6 ha | ✅ processed, see [REPORT](docs/REPORT.md) · [log](docs/PROCESSING_LOG.md) |
+
+### Products (2026-05-21_Map)
+
+In `deliverables/2026-05-21_Map/` (4.2 GB). UTM 13N (EPSG:32613), heights in metres NAVD88.
+
+| Product | File | Size |
+|---|---|---|
+| Orthophoto, 2 cm | `2026-05-21_orthophoto_2cm.tif` | 2.9 GB |
+| DTM (bare ground), 5 cm, corrected to USGS 3DEP | `2026-05-21_DTM_5cm_NAVD88.tif` | 306 MB |
+| DSM (surface), 5 cm, corrected to USGS 3DEP | `2026-05-21_DSM_5cm_NAVD88.tif` | 306 MB |
+| Contours, 0.25 m | `2026-05-21_contours_0.25m_NAVD88.gpkg` | 3 MB |
+| Terrain slope, 1 m | `2026-05-21_slope_1m_degrees.tif` | 3 MB |
+| Vegetation cover ≥ 10 cm, 1 m (approximate) | `2026-05-21_vegetation_cover_1m.tif` | 1 MB |
+| Point cloud, classified + height above ground | `2026-05-21_point_cloud_classified_HAG.laz` | 596 MB |
+| Textured 3D model (glTF) | `2026-05-21_3D_model_textured.glb` | 257 MB |
+| ODM quality report | `2026-05-21_ODM_quality_report.pdf` | 9 MB |
+
+The point cloud Z values and the 3D model use ODM's raw (uncorrected) heights. See the folder's `README.txt` and [REPORT §2](docs/REPORT.md#2-what-was-produced).
 
 ### 2026-05-21_Map results
 
@@ -113,7 +133,11 @@ low 50 % side overlap), not vegetation.
 3. `scripts/run_odm.sh YYYY-MM-DD_<Name>/Images_Mapping YYYY-MM-DD_<Name> full`
 4. `scripts/postprocess.sh processing/YYYY-MM-DD_<Name>`
    (+ `scripts/vegetation_chm.sh processing/YYYY-MM-DD_<Name>` for short vegetation)
-5. Add a section to `docs/DATA.md` and an entry to `docs/PROCESSING_LOG.md`.
+5. Vertical check/correction against USGS 3DEP (`correct_dem_3dep.py`), then `postprocess.sh` on the corrected DEMs
+   (see Quick start step 5).
+6. Copy the final products into `deliverables/YYYY-MM-DD_<Name>/` with a `README.txt`. Then delete the
+   intermediate ODM folders (see [WORKFLOW](docs/WORKFLOW.md#3-full-odm-run)).
+7. Add a section to `docs/DATA.md` and an entry to `docs/PROCESSING_LOG.md`.
 
 ## Data and outputs
 
@@ -121,7 +145,7 @@ low 50 % side overlap), not vegetation.
 point cloud, textured 3D model (.glb), QA report; ~4.2 GB) are copied with descriptive names into `deliverables/<survey>/` with a `README.txt`
 (CRS, units, accuracy, caveats). Use that folder for archiving or sharing. It is excluded from git.
 
-Raw imagery (3.6 GB for this survey) and processing outputs (tens of GB) are excluded from git
+Raw imagery (3.6 GB for this survey) and the local working folder (~13 GB after cleanup) are excluded from git
 (see `.gitignore`). Archive them separately, e.g. on institutional storage, Zenodo or an S3 bucket. Checksums
 are tracked in `*/metadata/sha256sums.txt`. Use [Git LFS](https://git-lfs.com) or a GitHub Release if you
 want to publish small final products such as a downsampled orthophoto.

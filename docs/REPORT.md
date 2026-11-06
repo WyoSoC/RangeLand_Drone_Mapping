@@ -28,8 +28,8 @@ Methods are in [WORKFLOW.md](WORKFLOW.md), the dataset in [DATA.md](DATA.md), th
 
 1. **The orthophoto and the local relief are high quality.** Trails, two-tracks, drainages, a circular
    disturbance feature and individual plant clumps are all clearly resolved.
-2. **Use the corrected elevation layers (`corrected/*_navd88.tif`) for any heights, slopes or contours.**
-   ODM's raw DSM/DTM are bowl-shaped because no ground control was used (§5.2).
+2. **Use the delivered DTM/DSM (`*_NAVD88.tif`) for any heights, slopes or contours.** They are corrected to
+   USGS lidar. ODM's raw heights were bowl-shaped because no ground control was used (§5.2).
 3. **Vegetation height is at the limit of what this data can resolve.** Plants here are 5–20 cm tall,
    about the same size as photogrammetric errors where photos overlap. Patterns are real; absolute cover values are approximate.
 
@@ -41,38 +41,28 @@ the example windows used below. Grid in metres, UTM zone 13N (EPSG:32613).*
 
 ## 2. What was produced
 
-All outputs are in `processing/2026-05-21_Map/` (13 GB after removing intermediate files, not in git). Every raster is a GeoTIFF/COG in
-**WGS 84 / UTM 13N (EPSG:32613)**.
+The final products are in **`deliverables/2026-05-21_Map/`** (4.2 GB, kept locally, not in git), together with a
+`README.txt` describing each file. Every file uses **WGS 84 / UTM 13N (EPSG:32613)**. Heights are metres above **NAVD88**.
 
-### Recommended layers (start here)
+| Product | File | Size | Units / resolution | Use it for |
+|---|---|---|---|---|
+| Orthophoto | `2026-05-21_orthophoto_2cm.tif` | 2.9 GB | RGB, 2 cm | Mapping features, digitizing, visual assessment, area measurement |
+| **DTM** (bare ground) | `2026-05-21_DTM_5cm_NAVD88.tif` | 306 MB | m NAVD88, 5 cm | Elevation, profiles, drainage, volume |
+| **DSM** (surface) | `2026-05-21_DSM_5cm_NAVD88.tif` | 306 MB | m NAVD88, 5 cm | Top-of-surface elevation including plants |
+| Contours | `2026-05-21_contours_0.25m_NAVD88.gpkg` | 3 MB | 0.25 m interval, attribute `elev_m` | Maps, drainage patterns |
+| Terrain slope | `2026-05-21_slope_1m_degrees.tif` | 3 MB | degrees, 1 m | Slope classes, erosion risk |
+| Vegetation cover | `2026-05-21_vegetation_cover_1m.tif` | 1 MB | fraction 0–1, 1 m | Cover patterns (approximate, §5.5) |
+| Point cloud | `2026-05-21_point_cloud_classified_HAG.laz` | 596 MB | 126.8 M points, ground/other + `HeightAboveGround` | 3D viewing, cross-sections, custom analysis |
+| 3D model | `2026-05-21_3D_model_textured.glb` | 257 MB | glTF 2.0, textured | Presentations, 3D viewing (§3.2) |
+| QA report | `2026-05-21_ODM_quality_report.pdf` | 9 MB | | Processing quality (§5.7) |
 
-| Product | File | Units / resolution | Use it for |
-|---|---|---|---|
-| Orthophoto | `odm_orthophoto/odm_orthophoto.tif` | RGB, 2 cm | Mapping features, digitizing, visual assessment, area measurement |
-| **DTM, corrected** | `corrected/dtm_navd88.tif` | m NAVD88, 5 cm | Bare-ground elevation, profiles, drainage, volume |
-| **DSM, corrected** | `corrected/dsm_navd88.tif` | m NAVD88, 5 cm | Top-of-surface elevation including plants |
-| Fine DTM, corrected | `corrected/dtm_fine_10cm_navd88.tif` | m NAVD88, 10 cm | Ground with low vegetation removed |
-| Hillshades | `derived_navd88/dtm_hillshade.tif`, `dsm_hillshade.tif` | 0–255, 5 cm | Seeing micro-relief: ruts, trails, erosion |
-| Contours | `derived_navd88/contours_0.25m.gpkg` | 0.25 m interval, attribute `elev_m` | Maps, drainage patterns |
-| Terrain slope | `derived_navd88/dtm_slope_deg_1m.tif` | degrees, 1 m | Slope classes, erosion risk |
-| Vegetation height | `vegetation/chm_10cm.tif` | m above ground, 10 cm | Plant clump height and structure (relative) |
-| Vegetation mask | `vegetation/veg_mask_10cm.tif` | 1 = vegetation ≥ 10 cm | Clump mapping |
-| Vegetation cover | `vegetation/veg_cover_1m.tif` | fraction 0–1, 1 m | Cover maps, summaries by area |
-| Point cloud | `vegetation/classified_hag.laz` | ground/other + `HeightAboveGround` | 3D viewing, cross-sections, custom analysis |
-| QA report | `odm_report/report.pdf` | | Processing quality (§5.7) |
+**Heights:** the DTM, DSM and contours are **corrected to USGS 3DEP lidar** (§5.2). The point cloud's Z values and
+the 3D model still carry ODM's raw heights (about 41 m low and bowl-shaped). The point cloud's `HeightAboveGround`
+is relative and unaffected. The elevation previews inside the QA report PDF also show raw heights.
 
-### Supporting and raw layers
-
-| Product | File | Note |
-|---|---|---|
-| ODM raw DSM/DTM | `odm_dem/dsm.tif`, `dtm.tif` | Heights in the drone's GPS reference, **bowl-shaped**. Keep for provenance only |
-| ODM point cloud | `odm_georeferencing/odm_georeferenced_model.laz` | Original ODM classification (nearly all ground) |
-| **Textured 3D model (glTF)** | `odm_texturing/odm_textured_model_geo.glb` (269 MB) | Single file, opens in any glTF viewer (§3.2). Raw ODM heights |
-| Textured 3D mesh (OBJ) | `odm_texturing/odm_textured_model_geo.obj` (+ `.mtl`, 64 textures, ~2.8 GB) | Open in MeshLab, Blender or CloudCompare |
-| USGS 3DEP reference | `reference/usgs_3dep_2m.tif` | Lidar DEM used for the vertical check |
-| Vertical check | `reference/diff_drone_minus_3dep.tif`, `residual_after_fit.tif`, `trend_fit.json` | §5.2 |
-| Raw-height derivatives | `derived/` | Same as `derived_navd88/` but from raw heights. Don't use for slope/contours |
-| Quick-looks | `derived*/quicklooks/*.png`, `vegetation/quicklooks/*.png` | Small previews |
+**Further layers** used in this report are kept in the local working folder and can be regenerated with the
+scripts. They are available on request: vegetation height (10 cm), vegetation mask, fine DTM (10 cm), hillshades,
+the USGS 3DEP reference DEM and the vertical-check rasters.
 
 ---
 
@@ -80,8 +70,11 @@ All outputs are in `processing/2026-05-21_Map/` (13 GB after removing intermedia
 
 ### 3.1 QGIS (recommended): open the ready-made project
 
-A pre-styled project is in the repository: **`qgis/2026-05-21_Map.qgz`**. It uses relative paths and works
-as long as `qgis/` sits next to `processing/`.
+**Quickest:** drag the files from `deliverables/2026-05-21_Map/` into a new QGIS project.
+
+**Full styled project:** `qgis/2026-05-21_Map.qgz` in the repository has every layer pre-styled, including the
+further layers listed in §2. It reads the local working outputs, so it opens fully on the processing computer,
+or after rerunning the workflow.
 
 1. Install [QGIS](https://qgis.org) (3.34 or newer; tested with 4.2).
 2. *Project → Open…* → `qgis/2026-05-21_Map.qgz`.
@@ -95,7 +88,7 @@ as long as `qgis/` sits next to `processing/`.
 | ODM raw outputs | raw DTM/DSM/hillshade | off |
 | Imagery | orthophoto, camera positions | orthophoto |
 
-The first time the point cloud is switched on, QGIS builds an index (`classified_hag.copc.laz`), which takes about a minute.
+The first time the point cloud is switched on, QGIS builds an index (a `.copc.laz` file next to it), which takes about a minute.
 
 ![qgis terrain](report/fig/10_qgis_terrain.png)
 *Figure 2. The project's starting view: corrected DTM in colour, with hillshade and 0.25 m contours
@@ -114,17 +107,11 @@ The first time the point cloud is switched on, QGIS builds an index (`classified
 | Measure distance / area | *Measure Line* / *Measure Area* (toolbar ruler) |
 | Compare two layers | Select the top layer → *Layer Properties → Transparency*, or toggle it on and off |
 | 3D view | *View → 3D Map Views → New 3D Map View*. Set the terrain to `DTM corrected (NAVD88)` and drape the orthophoto |
-| Zonal statistics (e.g., cover per pasture) | Draw or load polygons → *Processing Toolbox → Zonal statistics* on `veg_cover_1m.tif` |
+| Zonal statistics (e.g., cover per pasture) | Draw or load polygons → *Processing Toolbox → Zonal statistics* on the vegetation cover layer |
 | Cross-section of the point cloud | Point cloud layer → *Elevation Profile* tool with a narrow tolerance (0.2–0.5 m) |
 | Change the colour stretch | *Layer Properties → Symbology*: set min/max, colour ramp |
 
-To rebuild the project (e.g., after reprocessing):
-
-```bash
-QT_QPA_PLATFORM=offscreen /Applications/QGIS-*.app/Contents/MacOS/python scripts/make_qgis_project.py \
-    processing/2026-05-21_Map 2026-05-21_Map/metadata/Images_Mapping_cameras.geojson \
-    qgis/2026-05-21_Map.qgz docs/report/fig
-```
+To rebuild the project after reprocessing, see §9.
 
 ### 3.2 Other viewers
 
@@ -132,9 +119,8 @@ QT_QPA_PLATFORM=offscreen /Applications/QGIS-*.app/Contents/MacOS/python scripts
 |---|---|---|
 | Point clouds (`.laz`) | [CloudCompare](https://www.cloudcompare.org) (free) | Colour by *Classification* or the scalar field *HeightAboveGround*. *Edit → Cross Section* for slices |
 | Point clouds (web) | [plas.io](https://plas.io), [potree](https://potree.github.io) | Drag in a `.laz` (best with smaller subsets) |
-| **3D model (`.glb`)** | Drag onto [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com) or [3dviewer.net](https://3dviewer.net) (both run locally in the browser), Blender (*File → Import → glTF*), macOS Preview/Reality Composer, Windows 3D Viewer | 269 MB: Draco-compressed mesh (197k vertices) + 64 JPEG textures. Positioned in UTM 13N via `CESIUM_RTC` (centre 443997 E, 4569496 N), so it also loads into Cesium. Heights are ODM's raw (bowl-shaped) values |
-| 3D mesh (`.obj`) | MeshLab, Blender, CloudCompare | Same model, ~2.8 GB with textures. Coordinates are relative to the offset in `odm_georeferencing/coords.txt` |
-| Any GeoTIFF, quickly | macOS Preview opens the quick-look PNGs. `gdalinfo -stats file.tif` prints values | |
+| **3D model (`.glb`)** | Drag onto [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com) or [3dviewer.net](https://3dviewer.net) (both run locally in the browser), Blender (*File → Import → glTF*), macOS Preview/Reality Composer, Windows 3D Viewer | 257 MB: Draco-compressed mesh (197k vertices) + 64 JPEG textures. Positioned in UTM 13N via `CESIUM_RTC` (centre 443997 E, 4569496 N), so it also loads into Cesium. Heights are ODM's raw (bowl-shaped) values |
+| Any GeoTIFF, quickly | `gdalinfo -stats file.tif` prints the CRS, size and value range | |
 | Everything in a browser | [WebODM](https://github.com/OpenDroneMap/WebODM) | Optional GUI. Import the images or the finished assets |
 
 ---
@@ -147,9 +133,11 @@ QT_QPA_PLATFORM=offscreen /Applications/QGIS-*.app/Contents/MacOS/python scripts
   │
   ├─► postprocess.sh (GDAL) ───────────────────────► hillshade, slope, colour relief, contours
   ├─► vegetation_chm.sh (PDAL, fine SMRF) ─────────► height above ground, vegetation height/mask/cover, fine DTM
-  ├─► correct_dem_3dep.py (USGS 3DEP lidar) ───────► offset + bowl removed → corrected/*_navd88.tif
-  │       └─► postprocess.sh on corrected DEMs ─────► derived_navd88/ (hillshade, 1 m slope, 0.25 m contours)
+  ├─► correct_dem_3dep.py (USGS 3DEP lidar) ───────► offset + bowl removed → DTM/DSM in NAVD88
+  │       └─► postprocess.sh on corrected DEMs ─────► hillshade, 1 m slope, 0.25 m contours (NAVD88)
+  ├─► make_glb.sh ─────────────────────────────────► textured 3D model (.glb)
   └─► make_report_figures.py, make_qgis_project.py ► this report, QGIS project
+                                                      → final products copied to deliverables/
 ```
 
 Total compute time on an M1 Max (64 GB): ODM 3 h 07 m. Everything else ≈ 25 min.
@@ -199,7 +187,7 @@ ends. The corrected DTM (green) follows the lidar (black). Bottom: 40 m of the s
 Micro-relief of 10–40 cm (hummocks, ruts) and small plant clumps (green fill) show up. Neither is visible in the lidar.*
 
 **How to read elevations**
-- Use `corrected/*_navd88.tif`. Values are metres above the NAVD88 datum, comparable with USGS maps and survey data.
+- Use the delivered `*_DTM_5cm_NAVD88.tif` / `*_DSM_5cm_NAVD88.tif`. Values are metres above the NAVD88 datum, comparable with USGS maps and survey data.
 - Local height differences (within tens of metres) were accurate even in the raw data. Only the large-scale shape was wrong.
 - The correction assumes the terrain hasn't changed much since the lidar survey. Where it has (ponds,
   earthworks), the drone data show the present state, as intended.
@@ -271,7 +259,7 @@ Details, the parameter test and everything tried to remove the artifacts: [VEGET
 
 ![3d](report/fig/08_3d_view.png)
 *Figure 11. Corrected DTM draped with the orthophoto (450 × 350 m, heavy vertical exaggeration: the real
-relief here is only ~3 m). For interactive 3D, open the textured model `odm_textured_model_geo.glb` in a glTF
+relief here is only ~3 m). For interactive 3D, open the textured model `2026-05-21_3D_model_textured.glb` in a glTF
 viewer (§3.2), use a QGIS 3D map view, or load the point cloud in CloudCompare.*
 
 When viewing the `.glb`, remember the relief is real but subtle (about 5 m over 1 km). Most viewers show it
@@ -281,7 +269,7 @@ without vertical exaggeration, so the site looks flat. The textured surface is m
 ### 5.7 Processing quality (ODM report)
 
 ![qa](report/fig/13_odm_qa_report.png)
-*Figure 12. The six pages of `odm_report/report.pdf`.*
+*Figure 12. The six pages of the ODM quality report (`2026-05-21_ODM_quality_report.pdf`). Its elevation previews show raw heights.*
 
 | Panel | What to look for | This survey |
 |---|---|---|
@@ -318,7 +306,7 @@ without vertical exaggeration, so the site looks flat. The textured surface is m
 | Elevation of a point / a profile | Corrected DTM (NAVD88) | ±0.12 m |
 | How deep is this rut / drainage? | Corrected DTM or DSM, profile tool | Relative heights ±5 cm |
 | Where is vegetation denser or taller? | Vegetation cover 1 m, vegetation height | Ignore straight bands |
-| How much vegetation cover in this pasture? | `veg_cover_1m.tif` + zonal statistics | Approximate. Report the 10 cm threshold |
+| How much vegetation cover in this pasture? | `2026-05-21_vegetation_cover_1m.tif` + zonal statistics | Approximate. Report the 10 cm threshold |
 | Did the terrain change since an earlier survey? | Corrected DTM vs earlier corrected DTM | Both need the same correction or GCPs |
 
 ## 8. Limitations and recommendations
@@ -337,6 +325,9 @@ without vertical exaggeration, so the site looks flat. The textured surface is m
    → `postprocess.sh` (corrected) → `make_report_figures.py` / `make_qgis_project.py`.
 
 ## 9. Reproducing this report
+
+The scripts write to a local working folder (`processing/<survey>/`, not in git). The commands below rebuild
+everything from the raw photos. Copy the final products into `deliverables/` afterwards (§2).
 
 ```bash
 P=processing/2026-05-21_Map
