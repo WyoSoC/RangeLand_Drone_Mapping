@@ -117,6 +117,10 @@ low 50 % side overlap), not vegetation.
 
 ## Data and outputs
 
+**Deliverables:** the essential mapping products (orthophoto, corrected DTM/DSM, contours, slope, vegetation cover,
+QA report; ~3.4 GB) are copied with descriptive names into `deliverables/<survey>/` with a `README.txt`
+(CRS, units, accuracy, caveats). Use that folder for archiving or sharing. It is excluded from git.
+
 Raw imagery (3.6 GB for this survey) and processing outputs (tens of GB) are excluded from git
 (see `.gitignore`). Archive them separately, e.g. on institutional storage, Zenodo or an S3 bucket. Checksums
 are tracked in `*/metadata/sha256sums.txt`. Use [Git LFS](https://git-lfs.com) or a GitHub Release if you

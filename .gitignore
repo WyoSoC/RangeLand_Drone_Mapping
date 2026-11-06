@@ -28,3 +28,6 @@ processing/
 .idea/
 __pycache__/
 *.pyc
+
+# --- Deliverables (copies of final products; share/archive outside git) ---
+deliverables/
