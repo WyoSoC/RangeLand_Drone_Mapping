@@ -66,6 +66,7 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 │   ├── vegetation_chm.sh    # PDAL fine ground filter → height above ground, vegetation cover
 │   ├── correct_dem_3dep.py  # vertical check + bowl/offset correction against USGS 3DEP lidar
 │   ├── export_section.sh    # point-cloud slice → CSV (cross-sections)
+│   ├── make_glb.sh          # textured OBJ → .glb 3D model (ODM's converter)
 │   ├── make_report_figures.py  # figures for docs/REPORT.md (matplotlib + GDAL)
 │   └── make_qgis_project.py # pre-styled QGIS project + example map renders (PyQGIS)
 ├── qgis/

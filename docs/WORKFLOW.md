@@ -112,6 +112,7 @@ mvs_texturing → odm_georeferencing → odm_dem → odm_orthophoto → odm_repo
 | `odm_dem/dtm.tif` | Digital Terrain Model, bare earth (m, float32) |
 | `odm_georeferencing/odm_georeferenced_model.laz` | Classified, georeferenced point cloud |
 | `odm_texturing/odm_textured_model_geo.obj` (+ `.glb`) | Textured 3D mesh |
+| `odm_texturing/odm_textured_model_geo.glb` | Textured 3D model as a single glTF file (`--gltf`, or `scripts/make_glb.sh` afterwards) |
 | `odm_report/report.pdf` | QA report: overlap map, GPS residuals, reconstruction stats |
 | `opensfm/` , `openmvs/` | Intermediate files (can be deleted after QA; see `--optimize-disk-space`) |
 

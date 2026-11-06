@@ -102,6 +102,17 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ---
 
+## 2026-11-05: `2026-05-21_Map` glTF model
+
+- Created `odm_texturing/odm_textured_model_geo.glb` from the existing textured OBJ with `scripts/make_glb.sh`.
+  It calls ODM's own `opendm.gltf.obj2glb` with the UTM offset from `coords.txt`, the same as `--gltf`, and
+  needs no stage rerun.
+- 1.5 min. 269 MB (from ~2.8 GB OBJ + PNG textures): Draco-compressed mesh, 197,052 vertices, 64 JPEG textures,
+  `CESIUM_RTC` centre (443997, 4569496). Validated: glTF 2.0 header, extensions `CESIUM_RTC`,
+  `KHR_draco_mesh_compression`, `KHR_materials_unlit`. Heights are raw ODM values (2135.9–2159.1 m).
+
+---
+
 ## Template
 
 ```

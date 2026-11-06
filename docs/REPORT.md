@@ -67,7 +67,8 @@ All outputs are in `processing/2026-05-21_Map/` (71 GB, not in git). Every raste
 |---|---|---|
 | ODM raw DSM/DTM | `odm_dem/dsm.tif`, `dtm.tif` | Heights in the drone's GPS reference, **bowl-shaped**. Keep for provenance only |
 | ODM point cloud | `odm_georeferencing/odm_georeferenced_model.laz` | Original ODM classification (nearly all ground) |
-| Textured 3D mesh | `odm_texturing/odm_textured_model_geo.obj` (+ `.mtl`, 64 textures) | Open in MeshLab, Blender or CloudCompare |
+| **Textured 3D model (glTF)** | `odm_texturing/odm_textured_model_geo.glb` (269 MB) | Single file, opens in any glTF viewer (§3.2). Raw ODM heights |
+| Textured 3D mesh (OBJ) | `odm_texturing/odm_textured_model_geo.obj` (+ `.mtl`, 64 textures, ~2.8 GB) | Open in MeshLab, Blender or CloudCompare |
 | USGS 3DEP reference | `reference/usgs_3dep_2m.tif` | Lidar DEM used for the vertical check |
 | Vertical check | `reference/diff_drone_minus_3dep.tif`, `residual_after_fit.tif`, `trend_fit.json` | §5.2 |
 | Raw-height derivatives | `derived/` | Same as `derived_navd88/` but from raw heights. Don't use for slope/contours |
@@ -131,7 +132,8 @@ QT_QPA_PLATFORM=offscreen /Applications/QGIS-*.app/Contents/MacOS/python scripts
 |---|---|---|
 | Point clouds (`.laz`) | [CloudCompare](https://www.cloudcompare.org) (free) | Colour by *Classification* or the scalar field *HeightAboveGround*. *Edit → Cross Section* for slices |
 | Point clouds (web) | [plas.io](https://plas.io), [potree](https://potree.github.io) | Drag in a `.laz` (best with smaller subsets) |
-| 3D mesh (`.obj`) | MeshLab, Blender, CloudCompare | Large (~2.8 GB with textures). Future runs also write a `.glb` (`--gltf` added to the full profile) |
+| **3D model (`.glb`)** | Drag onto [gltf-viewer.donmccurdy.com](https://gltf-viewer.donmccurdy.com) or [3dviewer.net](https://3dviewer.net) (both run locally in the browser), Blender (*File → Import → glTF*), macOS Preview/Reality Composer, Windows 3D Viewer | 269 MB: Draco-compressed mesh (197k vertices) + 64 JPEG textures. Positioned in UTM 13N via `CESIUM_RTC` (centre 443997 E, 4569496 N), so it also loads into Cesium. Heights are ODM's raw (bowl-shaped) values |
+| 3D mesh (`.obj`) | MeshLab, Blender, CloudCompare | Same model, ~2.8 GB with textures. Coordinates are relative to the offset in `odm_georeferencing/coords.txt` |
 | Any GeoTIFF, quickly | macOS Preview opens the quick-look PNGs. `gdalinfo -stats file.tif` prints values | |
 | Everything in a browser | [WebODM](https://github.com/OpenDroneMap/WebODM) | Optional GUI. Import the images or the finished assets |
 
@@ -151,6 +153,7 @@ QT_QPA_PLATFORM=offscreen /Applications/QGIS-*.app/Contents/MacOS/python scripts
 ```
 
 Total compute time on an M1 Max (64 GB): ODM 3 h 07 m. Everything else ≈ 25 min.
+The `.glb` model was created afterwards from the existing textured mesh with `scripts/make_glb.sh` (1.5 min).
 
 ---
 
@@ -268,8 +271,12 @@ Details, the parameter test and everything tried to remove the artifacts: [VEGET
 
 ![3d](report/fig/08_3d_view.png)
 *Figure 11. Corrected DTM draped with the orthophoto (450 × 350 m, heavy vertical exaggeration: the real
-relief here is only ~3 m). For interactive 3D use QGIS 3D map views, CloudCompare (point cloud) or MeshLab
-(textured mesh).*
+relief here is only ~3 m). For interactive 3D, open the textured model `odm_textured_model_geo.glb` in a glTF
+viewer (§3.2), use a QGIS 3D map view, or load the point cloud in CloudCompare.*
+
+When viewing the `.glb`, remember the relief is real but subtle (about 5 m over 1 km). Most viewers show it
+without vertical exaggeration, so the site looks flat. The textured surface is most useful zoomed in
+(ruts, the circular feature, drainage banks).
 
 ### 5.7 Processing quality (ODM report)
 
@@ -336,6 +343,7 @@ P=processing/2026-05-21_Map
 QPY=/Applications/QGIS-final-4_2_3.app/Contents/MacOS/python      # Python with GDAL + matplotlib + PyQGIS
 
 scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map full        # ~3 h
+scripts/make_glb.sh $P                                                      # .glb 3D model (if --gltf wasn't used)
 scripts/postprocess.sh $P 0.5
 scripts/vegetation_chm.sh $P 0.10                                            # ~6 min
 $QPY scripts/correct_dem_3dep.py $P                                          # ~2 min, downloads 3DEP
