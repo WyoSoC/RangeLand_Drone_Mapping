@@ -67,7 +67,9 @@ QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py processing/2026-05-2
 │   ├── vegetation_chm.sh    # PDAL fine ground filter → height above ground, vegetation cover
 │   ├── correct_dem_3dep.py  # vertical check + bowl/offset correction against USGS 3DEP lidar
 │   ├── export_section.sh    # point-cloud slice → CSV (cross-sections)
-│   ├── make_glb.sh          # textured OBJ → .glb 3D model (ODM's converter)
+│   ├── make_glb.sh          # textured mesh → .glb 3D model (ODM's converter)
+│   ├── make_deliverables.sh # copy final products to deliverables/<survey>/ with final names
+│   ├── cleanup_intermediate.sh  # delete ODM intermediate data (dry run by default)
 │   ├── make_report_figures.py  # figures for docs/REPORT.md (matplotlib + GDAL)
 │   └── make_qgis_project.py # pre-styled QGIS project + example map renders (PyQGIS)
 ├── qgis/
@@ -135,8 +137,8 @@ low 50 % side overlap), not vegetation.
    (+ `scripts/vegetation_chm.sh processing/YYYY-MM-DD_<Name>` for short vegetation)
 5. Vertical check/correction against USGS 3DEP (`correct_dem_3dep.py`), then `postprocess.sh` on the corrected DEMs
    (see Quick start step 5).
-6. Copy the final products into `deliverables/YYYY-MM-DD_<Name>/` with a `README.txt`. Then delete the
-   intermediate ODM folders (see [WORKFLOW](docs/WORKFLOW.md#3-full-odm-run)).
+6. `scripts/make_deliverables.sh YYYY-MM-DD_<Name>` copies the final products to `deliverables/`. Add a `README.txt`.
+   Then run `scripts/cleanup_intermediate.sh YYYY-MM-DD_<Name> --yes` (see [WORKFLOW §6](docs/WORKFLOW.md#6-deliverables-and-cleanup)).
 7. Add a section to `docs/DATA.md` and an entry to `docs/PROCESSING_LOG.md`.
 
 ## Data and outputs

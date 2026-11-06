@@ -18,7 +18,7 @@ Optional:
 | [WebODM](https://github.com/OpenDroneMap/WebODM) | Browser GUI on top of ODM: task management, 2D/3D viewer, measurement tools. Run with `./webodm.sh start` (Docker). Same engine and the same options as the CLI used here. |
 | [CloudCompare](https://www.cloudcompare.org) (GPL) | Inspect/compare point clouds (`.laz`), cross-sections, change detection between surveys. |
 | [PDAL](https://pdal.io) (BSD) | Scriptable point cloud processing (re-classify ground, filter, rasterize). `brew install pdal`. |
-| [MeshLab](https://www.meshlab.net) / [Blender](https://www.blender.org) | Viewing/editing the textured 3D model (`.obj`/`.glb`). |
+| [MeshLab](https://www.meshlab.net) / [Blender](https://www.blender.org) | Viewing/editing the textured 3D model (`.glb`). |
 
 ## Why ODM
 

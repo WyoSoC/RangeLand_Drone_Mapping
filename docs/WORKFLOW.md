@@ -4,10 +4,12 @@ From raw DJI images to orthophoto, DSM, DTM, point cloud and 3D model, using
 OpenDroneMap in Docker on macOS (Apple Silicon). Every step is a command you can rerun.
 
 ```
-raw JPGs ──► 1. inventory/QA ──► 2. preview run (optional) ──► 3. full ODM run ──► 4. post-process (GDAL) ──► 5. QA + view in QGIS
-              scripts/             config/odm_preview.args      config/odm_full.args    scripts/postprocess.sh
-              inventory_images.py
+raw JPGs ─► 1. inventory/QA ─► 2. preview (optional) ─► 3. full ODM run ─► 4. post-process, vegetation, 3DEP correction
+                                                                          ─► 5. QA ─► 6. deliverables + cleanup ─► 7. view
 ```
+
+All scripts write to a local working folder (`processing/<survey>/`, not in git). Only the final products
+copied to `deliverables/<survey>/` in step 6 are meant to be kept and shared.
 
 ---
 
@@ -57,15 +59,16 @@ A fast orthophoto that skips dense reconstruction. Good for checking coverage an
 scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map_preview preview
 ```
 
-To test the full pipeline on a small subset first (as done for this dataset with flight 3):
+To test the full pipeline on a small subset first (as done for this dataset with flight 3), put hard links to
+~50 images in a temporary folder inside the project and run the `test` profile on it:
 
 ```bash
-mkdir -p processing/_subsets/flight3
-for f in 2026-05-21_Map/Images_Mapping/DJI_0{798..846}.JPG; do ln -f "$f" processing/_subsets/flight3/; done
-scripts/run_odm.sh processing/_subsets/flight3 test_flight3 test
+mkdir -p processing/_subset && ln -f 2026-05-21_Map/Images_Mapping/DJI_0{798..846}.JPG processing/_subset/
+scripts/run_odm.sh processing/_subset test_subset test
 ```
 
 Use hard links (`ln`), not symlinks. Symlinks pointing outside the mounted folder are invisible inside Docker.
+Delete the subset and the test output when done. The hard links don't affect the raw photos.
 
 ## 3. Full ODM run
 
@@ -75,9 +78,9 @@ scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map full
 
 What the script does:
 - Mounts the image folder **read-only** at `/datasets/project/images`. Raw data are never modified.
-- Writes all outputs to `processing/<project_name>/`.
+- Writes all outputs to the working folder `processing/<project_name>/`.
 - Reads ODM options from `config/odm_<profile>.args` (commented, one option per line).
-- Saves a full timestamped log, including the exact options, to `processing/<project_name>/logs/`.
+- Saves a full timestamped log there, including the exact options.
 
 ### Options used (`config/odm_full.args`) and why
 
@@ -92,7 +95,7 @@ What the script does:
 | `--orthophoto-resolution` | 2 cm | Close to native GSD (1.75 cm). |
 | `--auto-boundary` | on | Crops the poorly reconstructed fringe outside the flight area. |
 | `--cog`, `--build-overviews` | on | Cloud-Optimized GeoTIFFs with overviews, so they load fast in QGIS and web maps. |
-| `--pc-las` | on | Extra `.las` copy of the point cloud. `.laz` is always produced. |
+| `--gltf` | on | Also exports the textured 3D model as a single `.glb` file. |
 
 To rerun only later stages (e.g., after changing DEM options), keep the project folder and add `--rerun-from`:
 
@@ -100,24 +103,14 @@ To rerun only later stages (e.g., after changing DEM options), keep the project 
 scripts/run_odm.sh 2026-05-21_Map/Images_Mapping 2026-05-21_Map full --rerun-from odm_dem
 ```
 
-To free disk space after QA, the intermediate folders (`opensfm/`, `odm_filterpoints/`, `odm_meshing/`,
-`odm_texturing_25d/`, `*.original.tif`, `.las`) can be deleted. That removes the option to `--rerun-from` a later stage.
-
 ODM stage order: `dataset → split → merge → opensfm → openmvs → odm_filterpoints → odm_meshing →
 mvs_texturing → odm_georeferencing → odm_dem → odm_orthophoto → odm_report → odm_postprocess`.
 
-### Main outputs (`processing/<project_name>/`)
+### Main outputs
 
-| Path | Product |
-|---|---|
-| `odm_orthophoto/odm_orthophoto.tif` | RGB(A) orthomosaic GeoTIFF (COG) |
-| `odm_dem/dsm.tif` | Digital Surface Model (m, float32) |
-| `odm_dem/dtm.tif` | Digital Terrain Model, bare earth (m, float32) |
-| `odm_georeferencing/odm_georeferenced_model.laz` | Classified, georeferenced point cloud |
-| `odm_texturing/odm_textured_model_geo.obj` (+ `.glb`) | Textured 3D mesh |
-| `odm_texturing/odm_textured_model_geo.glb` | Textured 3D model as a single glTF file (`--gltf`, or `scripts/make_glb.sh` afterwards) |
-| `odm_report/report.pdf` | QA report: overlap map, GPS residuals, reconstruction stats |
-| `opensfm/` , `openmvs/` | Intermediate files (can be deleted after QA; see `--optimize-disk-space`) |
+ODM produces the orthophoto, DSM, DTM, a classified point cloud, the textured 3D model (`.glb` with `--gltf`;
+for older runs use `scripts/make_glb.sh`) and a QA report. It also writes large intermediate data, which
+`scripts/cleanup_intermediate.sh` removes in step 6. Which outputs become deliverables is listed in step 6.
 
 All rasters use the WGS84 / UTM zone CRS ODM picks automatically. For this site that is **UTM 13N, EPSG:32613**.
 
@@ -127,17 +120,17 @@ All rasters use the WGS84 / UTM zone CRS ODM picks automatically. For this site 
 scripts/postprocess.sh processing/2026-05-21_Map 0.5     # 0.5 m contour interval
 ```
 
-Creates `processing/<project_name>/derived/`:
+Creates (in the working folder):
 
 | File | Description | Rangeland use |
 |---|---|---|
 | `dtm_hillshade.tif`, `dsm_hillshade.tif` | Multidirectional hillshade | Visualize drainages, erosion, two-tracks, trails |
-| `dtm_slope_deg.tif` | Slope (degrees) | Erosion risk, grazing distribution |
+| `dtm_slope_deg_1m.tif` | Terrain slope (degrees) from the DTM averaged to 1 m | Erosion risk, grazing distribution |
+| `dtm_slope_deg.tif` | Slope at full resolution (measures micro-relief) | Surface roughness |
 | `dtm_color_relief.tif` | Colorized DTM | Quick-look elevation map |
 | `chm.tif` | Vegetation height = DSM − DTM, clamped ≥ 0 | Shrub (e.g., sagebrush) height and cover, structure |
-| `contours_0.5m.gpkg` | DTM contours | Maps, water flow, layout |
+| `contours_<N>m.gpkg` | DTM contours (from the 1 m DTM) | Maps, water flow, layout |
 | `summary.txt` | CRS, resolution, extents, elevation stats | Record keeping |
-| `quicklooks/*.png` | 1600 px previews (ortho, hillshade, color relief, CHM) | README figures, reports |
 
 ## 4b. Fine-scale vegetation (short grass / low shrubs)
 
@@ -146,8 +139,8 @@ scripts/vegetation_chm.sh processing/2026-05-21_Map 0.10
 ```
 
 Reclassifies the point cloud with a fine SMRF (threshold 0.05 m, window 2 m), computes height above ground
-per point, and writes `vegetation/chm_10cm.tif`, `veg_mask_10cm.tif`, `veg_cover_1m.tif`, `dtm_fine_10cm.tif`
-and `classified_hag.laz`. ODM's outputs are left untouched. Method, parameter comparison and known
+per point, and writes a vegetation height raster (10 cm), a vegetation mask, a 1 m vegetation-cover raster, a fine
+DTM and a reclassified point cloud with a `HeightAboveGround` attribute. ODM's outputs are left untouched. Method, parameter comparison and known
 artifacts are in [VEGETATION.md](VEGETATION.md).
 
 ## 4c. Vertical check and correction against USGS 3DEP (US sites)
@@ -164,7 +157,8 @@ P=processing/2026-05-21_Map
 DSM=$P/corrected/dsm_navd88.tif DTM=$P/corrected/dtm_navd88.tif OUT=$P/derived_navd88 scripts/postprocess.sh $P 0.25
 ```
 
-**Always run this check** when no ground control is available, and use `corrected/` and `derived_navd88/` for elevation work.
+**Always run this check** when no ground control is available, and use the corrected DEMs and the terrain
+products made from them for elevation work. They are the ones copied to the deliverables in step 6.
 
 ## 4d. Report and QGIS project
 
@@ -173,7 +167,7 @@ project (`qgis/<survey>.qgz`). See [REPORT.md §9](REPORT.md#9-reproducing-this-
 
 ## 5. QA checklist
 
-1. **`odm_report/report.pdf`**:
+1. **ODM quality report (PDF)**:
    - Reconstructed images: ideally > 95 % of input images.
    - Overlap map: at least 5 images per point over the area of interest.
    - GPS errors: a few metres is normal without RTK/GCPs.
@@ -183,11 +177,38 @@ project (`qgis/<survey>.qgz`). See [REPORT.md §9](REPORT.md#9-reproducing-this-
 4. **CHM**: check heights against a few field-measured shrubs if available.
 5. Write run notes (date, ODM version, profile, runtime, issues) in [PROCESSING_LOG.md](PROCESSING_LOG.md).
 
-## 6. Viewing
+## 6. Deliverables and cleanup
 
-- **QGIS**: drag in the `.tif`, `.gpkg` and `.laz` files. QGIS 3.18+ shows point clouds natively, with a 3D view.
-- **3D model**: open `odm_textured_model_geo.glb` in any glTF viewer, or the `.obj` in MeshLab/Blender.
-- **WebODM** (optional GUI): import the same images, or upload the finished `processing/` assets.
+```bash
+scripts/make_deliverables.sh 2026-05-21_Map                 # copy final products, verify they're identical
+scripts/cleanup_intermediate.sh 2026-05-21_Map              # dry run: lists what would be deleted
+scripts/cleanup_intermediate.sh 2026-05-21_Map --yes        # delete intermediate ODM data (75 GB → 13 GB here)
+```
+
+`make_deliverables.sh` copies these into `deliverables/<survey>/` (on macOS as space-free clones). Then write a
+`README.txt` for the folder; the 2026-05-21_Map one is a template.
+
+| Deliverable | Content |
+|---|---|
+| `<date>_orthophoto_2cm.tif` | Orthophoto |
+| `<date>_DTM_5cm_NAVD88.tif`, `<date>_DSM_5cm_NAVD88.tif` | DTM and DSM corrected to USGS 3DEP |
+| `<date>_contours_0.25m_NAVD88.gpkg`, `<date>_slope_1m_degrees.tif` | Contours and terrain slope (corrected) |
+| `<date>_vegetation_cover_1m.tif` | Vegetation cover ≥ 10 cm |
+| `<date>_point_cloud_classified_HAG.laz` | Point cloud with ground class + height above ground |
+| `<date>_3D_model_textured.glb` | Textured 3D model |
+| `<date>_ODM_quality_report.pdf` | ODM QA report |
+
+`cleanup_intermediate.sh` removes ODM's intermediate data and the parameter-test folders. Final products, the
+layers used by the QGIS project, reference data and logs are kept. Afterwards ODM can't `--rerun-from` a later
+stage: reprocessing means a full run from the raw photos.
+
+## 7. Viewing
+
+- **QGIS**: drag in the deliverables (`.tif`, `.gpkg`, `.laz`). QGIS 3.18+ shows point clouds natively, with a 3D
+  view. For every layer pre-styled, open `qgis/<survey>.qgz` (needs the local working folder).
+- **3D model**: open the `.glb` in any glTF viewer (e.g. gltf-viewer.donmccurdy.com, 3dviewer.net) or Blender.
+- **WebODM** (optional GUI): import the same images, or upload the deliverables.
+- Interpretation guide: [REPORT.md](REPORT.md).
 
 ## Tuning notes for rangeland
 

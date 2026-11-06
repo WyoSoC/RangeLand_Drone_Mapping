@@ -7,9 +7,9 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ---
 
-## 2026-11-05: `test_flight3` (pipeline test)
+## 2026-11-05: pipeline test on flight 3
 
-- **Input:** flight 3 only, DJI_0798–DJI_0846 (49 images), hard-linked into `processing/_subsets/flight3`
+- **Input:** flight 3 only, DJI_0798–DJI_0846 (49 images), hard-linked into a temporary subset folder (since deleted)
 - **Profile:** `config/odm_test.args` (medium feature/pc quality, DSM+DTM 10 cm, ortho 5 cm)
 - **Purpose:** check that Docker/Colima mounts, the DJI metadata, rolling-shutter correction and all output stages work before the multi-hour full run.
 - **Notes:**
@@ -48,8 +48,8 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
   |---|---|---|
   | Orthophoto | 60388 × 47123 px @ 2 cm (mean GSD 1.82 cm) | 3.0 GB COG |
   | DSM / DTM | 24154 × 18848 px @ 5 cm | 365 / 363 MB COG |
-  | Point cloud | 126.8 M points, classified | 450 MB `.laz`, 4.6 GB `.las` |
-  | Textured mesh | `.obj` + 64 texture atlases | ~2.8 GB |
+  | Point cloud | 126.8 M points, classified | 450 MB `.laz` |
+  | Textured mesh | 64 texture atlases | ~2.8 GB (later converted to a 257 MB `.glb`) |
   | Mapped area | 97.6 ha (≈ 1.2 × 0.94 km bounding box) | |
 
 - **Elevations:** 2141.8 – 2161.2 m (≈ 19 m relief across the site), mean 2146.5 m (GPS ellipsoidal heights, not survey-grade).
@@ -91,8 +91,8 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 - **Vertical check vs USGS 3DEP** (`correct_dem_3dep.py`, 2 m grid, 156k cells): raw ODM DTM = 3DEP − 40.8 m (std 2.9 m),
   with a **bowl ("doming") distortion of 13.6 m**: centre too low, edges too high. A 2nd-order polynomial fit removes it.
   Residual **0.12 m RMSE**, p05/p95 −0.20/+0.18 m. Spot checks at 11 USGS EPQS points: within 0.00–0.34 m.
-- **Corrected DEMs** written to `corrected/*_navd88.tif`. Terrain products regenerated into `derived_navd88/`
-  (0.25 m contours).
+- **Corrected DEMs** (NAVD88) written, and the terrain products regenerated from them (0.25 m contours).
+  Delivered as `2026-05-21_DTM_5cm_NAVD88.tif`, `2026-05-21_DSM_5cm_NAVD88.tif`, contours and slope.
 - **postprocess.sh changes:** contours are now generated from a 1 m-averaged DTM (the 5 cm DTM gave 56k noisy rings,
   132 MB → 5.7k lines, 3 MB). Added `dtm_slope_deg_1m.tif` (terrain slope, median 1.5°). The 5 cm slope
   (median ≈ 5°) mostly measures grass-hummock roughness.
@@ -104,10 +104,10 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ## 2026-11-05: `2026-05-21_Map` glTF model
 
-- Created `odm_texturing/odm_textured_model_geo.glb` from the existing textured OBJ with `scripts/make_glb.sh`.
-  It calls ODM's own `opendm.gltf.obj2glb` with the UTM offset from `coords.txt`, the same as `--gltf`, and
-  needs no stage rerun.
-- 1.5 min. 269 MB (from ~2.8 GB OBJ + PNG textures): Draco-compressed mesh, 197,052 vertices, 64 JPEG textures,
+- Created the textured 3D model as `.glb` (delivered as `2026-05-21_3D_model_textured.glb`) from ODM's textured
+  mesh with `scripts/make_glb.sh`. It calls ODM's own `opendm.gltf.obj2glb` with the project's UTM offset, the same
+  as `--gltf`, and needs no stage rerun.
+- 1.5 min. 257 MB (from ~2.8 GB mesh + PNG textures): Draco-compressed mesh, 197,052 vertices, 64 JPEG textures,
   `CESIUM_RTC` centre (443997, 4569496). Validated: glTF 2.0 header, extensions `CESIUM_RTC`,
   `KHR_draco_mesh_compression`, `KHR_materials_unlit`. Heights are raw ODM values (2135.9–2159.1 m).
 
@@ -115,11 +115,12 @@ ODM: `opendronemap/odm:3.6.2` (arm64).
 
 ## 2026-11-05: cleanup of intermediate files
 
-Deleted ~63 GB of intermediate and test data (processing folder 75.7 GB → 13 GB):
-`opensfm/` (46 GB), `odm_filterpoints/`, `odm_texturing_25d/`, `odm_meshing/`, the uncompressed `.las` duplicate,
-`*.original.tif` (pre-crop ortho/DSM/DTM), `processing/test_flight3/`, `processing/_subsets/` (hard links only;
-raw photos untouched), and `vegetation/test*` (parameter tests). All products, the QGIS project layers (18/18)
-and `deliverables/` were checked afterwards.
+Deleted ~63 GB of intermediate and test data (working folder 75.7 GB → 13 GB): ODM's camera-alignment working
+data (46 GB), the pre-meshing point cloud, mesh and 2.5D texturing intermediates, the uncompressed point-cloud
+duplicate, uncropped copies of the ortho/DSM/DTM, the flight-3 test run with its hard-linked subset (raw photos
+untouched), and the vegetation parameter tests. All products, the QGIS project layers (18/18) and the
+deliverables were checked afterwards. The same cleanup is now scripted: `scripts/cleanup_intermediate.sh`.
+`--pc-las` was removed from the full profile so the duplicate isn't created again.
 **Consequence:** ODM can no longer `--rerun-from` an intermediate stage for this project. Reprocessing means a
 full run from the raw photos (~3 h).
 

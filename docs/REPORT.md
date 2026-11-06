@@ -345,4 +345,6 @@ scripts/export_section.sh $P band 444040 444070 4569686.8 4569687.2
 $QPY scripts/make_report_figures.py $P 2026-05-21_Map/metadata/Images_Mapping_inventory.csv docs/report/fig
 QT_QPA_PLATFORM=offscreen $QPY scripts/make_qgis_project.py $P \
     2026-05-21_Map/metadata/Images_Mapping_cameras.geojson qgis/2026-05-21_Map.qgz docs/report/fig
+scripts/make_deliverables.sh 2026-05-21_Map                                  # final products → deliverables/
+scripts/cleanup_intermediate.sh 2026-05-21_Map --yes                         # remove intermediate data
 ```
